@@ -5,8 +5,8 @@ class:-
 """
 import models
 import unittest
-import datetime
-import time
+from datetime import datetime
+from time import sleep
 from models.base_model import BaseModel
 
 class TestBaseModel_Initialize(unittest.TestCase):
@@ -46,3 +46,15 @@ class TestBaseModel_dict(unittest.TestCase):
 
 class TestBaseModel_save(unittest.TestCase):
      """Unittests for testing save of the BaseModel class."""
+
+     def test_save_with_arg(self):
+         bm = BaseModel()
+         with self.assertRaises(TypeError):
+             bm.save(None)
+
+     def test_save_updates_file(self):
+         bm = BaseModel()
+         bm.save()
+         bmid = "BaseModel." + bm.id
+         with open("file.json", "r") as f:
+             self.assertIn(bmid, f.read())
