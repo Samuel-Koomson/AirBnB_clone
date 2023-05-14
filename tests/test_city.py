@@ -61,9 +61,29 @@ class TestCity_instantiation(unittest.TestCase):
         cy2 = City()
         self.assertLess(cy1.updated_at, cy2.updated_at)
 
+    def test_str_representation(self):
+        dt = datetime.today()
+        dt_repr = repr(dt)
+        cy = City()
+        cy.id = "123456"
+        cy.created_at = cy.updated_at = dt
+        cystr = cy.__str__()
+        self.assertIn("[City] (123456)", cystr)
+        self.assertIn("'id': '123456'", cystr)
+        self.assertIn("'created_at': " + dt_repr, cystr)
+        self.assertIn("'updated_at': " + dt_repr, cystr)
+
     def test_args_unused(self):
         cy = City(None)
         self.assertNotIn(None, cy.__dict__.values())
+
+    def test_instantiation_with_kwargs(self):
+        dt = datetime.today()
+        dt_iso = dt.isoformat()
+        cy = City(id="345", created_at=dt_iso, updated_at=dt_iso)
+        self.assertEqual(cy.id, "345")
+        self.assertEqual(cy.created_at, dt)
+        self.assertEqual(cy.updated_at, dt)
 
     def test_instantiation_with_None_kwargs(self):
         with self.assertRaises(TypeError):
@@ -72,6 +92,23 @@ class TestCity_instantiation(unittest.TestCase):
 
 class TestCity_save(unittest.TestCase):
     """Unittests for testing save method of the City class."""
+
+    @classmethod
+    def setUp(self):
+        try:
+            os.rename("file.json", "tmp")
+        except IOError:
+            pass
+
+    def tearDown(self):
+        try:
+            os.remove("file.json")
+        except IOError:
+            pass
+        try:
+            os.rename("tmp", "file.json")
+        except IOError:
+            pass
 
     def test_one_save(self):
         cy = City()
@@ -123,6 +160,19 @@ class TestCity_to_dict(unittest.TestCase):
         self.assertEqual(str, type(cy_dict["id"]))
         self.assertEqual(str, type(cy_dict["created_at"]))
         self.assertEqual(str, type(cy_dict["updated_at"]))
+
+    def test_to_dict_output(self):
+        dt = datetime.today()
+        cy = City()
+        cy.id = "123456"
+        cy.created_at = cy.updated_at = dt
+        tdict = {
+            'id': '123456',
+            '__class__': 'City',
+            'created_at': dt.isoformat(),
+            'updated_at': dt.isoformat(),
+        }
+        self.assertDictEqual(cy.to_dict(), tdict)
 
     def test_contrast_to_dict_dunder_dict(self):
         cy = City()

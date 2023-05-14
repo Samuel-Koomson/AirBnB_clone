@@ -67,9 +67,29 @@ class TestReview_instantiation(unittest.TestCase):
         rv2 = Review()
         self.assertLess(rv1.updated_at, rv2.updated_at)
 
+    def test_str_representation(self):
+        dt = datetime.today()
+        dt_repr = repr(dt)
+        rv = Review()
+        rv.id = "123456"
+        rv.created_at = rv.updated_at = dt
+        rvstr = rv.__str__()
+        self.assertIn("[Review] (123456)", rvstr)
+        self.assertIn("'id': '123456'", rvstr)
+        self.assertIn("'created_at': " + dt_repr, rvstr)
+        self.assertIn("'updated_at': " + dt_repr, rvstr)
+
     def test_args_unused(self):
         rv = Review(None)
         self.assertNotIn(None, rv.__dict__.values())
+
+    def test_instantiation_with_kwargs(self):
+        dt = datetime.today()
+        dt_iso = dt.isoformat()
+        rv = Review(id="345", created_at=dt_iso, updated_at=dt_iso)
+        self.assertEqual(rv.id, "345")
+        self.assertEqual(rv.created_at, dt)
+        self.assertEqual(rv.updated_at, dt)
 
     def test_instantiation_with_None_kwargs(self):
         with self.assertRaises(TypeError):
@@ -78,6 +98,23 @@ class TestReview_instantiation(unittest.TestCase):
 
 class TestReview_save(unittest.TestCase):
     """Unittests for testing save method of the Review class."""
+
+    @classmethod
+    def setUp(self):
+        try:
+            os.rename("file.json", "tmp")
+        except IOError:
+            pass
+
+    def tearDown(self):
+        try:
+            os.remove("file.json")
+        except IOError:
+            pass
+        try:
+            os.rename("tmp", "file.json")
+        except IOError:
+            pass
 
     def test_one_save(self):
         rv = Review()
@@ -122,6 +159,26 @@ class TestReview_to_dict(unittest.TestCase):
         self.assertIn("created_at", rv.to_dict())
         self.assertIn("updated_at", rv.to_dict())
         self.assertIn("__class__", rv.to_dict())
+
+    def test_to_dict_datetime_attributes_are_strs(self):
+        rv = Review()
+        rv_dict = rv.to_dict()
+        self.assertEqual(str, type(rv_dict["id"]))
+        self.assertEqual(str, type(rv_dict["created_at"]))
+        self.assertEqual(str, type(rv_dict["updated_at"]))
+
+    def test_to_dict_output(self):
+        dt = datetime.today()
+        rv = Review()
+        rv.id = "123456"
+        rv.created_at = rv.updated_at = dt
+        tdict = {
+            'id': '123456',
+            '__class__': 'Review',
+            'created_at': dt.isoformat(),
+            'updated_at': dt.isoformat(),
+        }
+        self.assertDictEqual(rv.to_dict(), tdict)
 
     def test_contrast_to_dict_dunder_dict(self):
         rv = Review()
